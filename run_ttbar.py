@@ -75,8 +75,9 @@ pythia = Pythia('ttbar.cmnd', random_state=1)
 selection = ((STATUS == 1) & ~HAS_END_VERTEX)
 unclustered_particles = list()
 # ---------------------------------------------------------------------
-# Generate Jets
+# Generate Jets and Histogram Data
 # ---------------------------------------------------------------------
+
 for event in pythia(events=100):
    vectors = event.all(selection)
    sequence = cluster(np.array(vectors), R=0.4, p=-1, ep=True)
@@ -87,5 +88,17 @@ for event in pythia(events=100):
       print(const_arry)
       print("Jet Mass = ", calc_jetmass(const_arry))
       print("nConsts = ", nConsts(const_arry))
-
-
+      i = 1
+      for sub_array in const_arry:
+         print(i*" ", "delR Unimplemented")
+         print(i*" ", "calc_phi = ", calc_phi(sub_array[1], sub_array[1]))
+         print(i*" ", "calc_eta = ", calc_eta(sub_array[1], sub_array[2]))
+         print(i*" ", "calc_effr = ", calc_effr(calc_jetmass(const_arry),
+                                         sub_array[1],
+                                         sub_array[2])
+              )
+         print(i*" ", "calc_ET = ", calc_ET(sub_array[0],
+                                     sub_array[3],
+                                     sub_array[2])
+              )
+         i += 1
