@@ -68,37 +68,92 @@ def delR(true_w, w_jet):
 def nConsts(jet):
    #return the number of constituents in a jet
    return len(jet)
-# ---------------------------------------------------------------------
+# -----------------------------------------------------------------------
 # Generate Events
-# ---------------------------------------------------------------------
+# -----------------------------------------------------------------------
 pythia = Pythia('ttbar.cmnd', random_state=1)
 selection = ((STATUS == 1) & ~HAS_END_VERTEX)
 unclustered_particles = list()
-# ---------------------------------------------------------------------
+# -----------------------------------------------------------------------
 # Generate Jets and Histogram Data
-# ---------------------------------------------------------------------
-
-for event in pythia(events=100):
+# -----------------------------------------------------------------------
+event_data = list()
+for event in pythia(events=1):
    vectors = event.all(selection)
-   sequence = cluster(np.array(vectors), R=0.4, p=-1, ep=True)
+   sequence = cluster(vectors, R=0.4, p=-1, ep=True)
    jets = sequence.inclusive_jets()
    unclustered_particles.append(sequence.unclustered_particles())
+   # position i of jets_data links to the list containing various bins
+   # data for a jet
+   jets_data = list()
    for jet in jets:
-      const_arry = jet.constituents_array(ep=True)
-      print(const_arry)
-      print("Jet Mass = ", calc_jetmass(const_arry))
-      print("nConsts = ", nConsts(const_arry))
-      i = 1
-      for sub_array in const_arry:
-         print(i*" ", "delR Unimplemented")
-         print(i*" ", "calc_phi = ", calc_phi(sub_array[1], sub_array[1]))
-         print(i*" ", "calc_eta = ", calc_eta(sub_array[1], sub_array[2]))
-         print(i*" ", "calc_effr = ", calc_effr(calc_jetmass(const_arry),
-                                         sub_array[1],
-                                         sub_array[2])
-              )
-         print(i*" ", "calc_ET = ", calc_ET(sub_array[0],
-                                     sub_array[3],
-                                     sub_array[2])
-              )
+      jet_data = list()
+      jet_data.append(jet.mass)
+      jet_data.append(jet.eta)
+      jet_data.append(jet.phi)
+      jet_data.append(jet.e)
+      jet_data.append(jet.et)
+      jet_data.append(jet.pt)
+      jet_data.append(int(len(jet.constituents_array())))
+      jet_data.append(jet.mass*2/(np.sqrt(jet.px**2 + jet.py**2)))
+      jets_data.append(np.array(jet_data))
+   jets_data.append(len(jets))
+   event_data.append(np.array(jets_data))
+# Data Structure Artchitecture Logic: event_data is the set of all jets
+# data. The cardinality of event_data = the number of events. Each member
+# in event_data is also a set. Let each member {jets} in the set of event
+# data also be a set, with the cardinality equal to the number of jets.
+# Each jet is a member in the set of jets and is an ordered set which
+# contains various physical properties of the jet 
+# -----------------------------------------------------------------------
+# Plot Data
+# -----------------------------------------------------------------------
+# Create a histogram of counts per event with respect to the event number
+# for each physical property
+
+# Plot of number of counts of mass of jet in the jets of that event
+jets_njets = list()
+c_v_index_to_name = {
+   0 : "Mass"
+   1 : "Eta"
+   2 : "Phi"
+   3 : "Energy"
+   4 : "Transverse Energy"
+   5 : "Transverse Momentum"
+   6 : "Number of constituents"
+   7 : "Eff r"
+}
+c_v_index_to_step = {
+   0 :  
+   1 e
+   2 : 
+   3 : 
+   4 : 
+   5 : 
+   6 : 
+   7 : 
+}
+c_v_index_to_range = dict()
+for jets_elem in event_data:
+   jets_properties = list()
+   i = 0
+   for jet_elem in jets_elem[:-1]:
+      for physical_property in jet_elem:
+         if (len(jets_properties) == 0):
+            jets_properties.append([physical_property])
+            i += 1
+            continue
+         if i < 8:
+            jets_properties.append([physical_property])
+         else: jets_properties[i % 8].append(physical_property)
          i += 1
+   for column_variable_index in range(len(jets_properties)):
+      
+      plt.hist(jets_properties[column_variable_index],
+                              100,
+                              range=[0, 768])
+      plt.title(str(column_variable_index))
+      plt.xlabel("Jet Variable Property")
+      plt.ylabel("Coutnts per event")
+      plt.savefig(str(column_variable_index)+".pdf")
+      plt.figure()
