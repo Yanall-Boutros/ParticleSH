@@ -8,66 +8,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from pyjet import cluster
-# ----------------------------------------------------------------------
-# Function Definitions and Global Variables
-# ----------------------------------------------------------------------
-# njets, the number of jets (associated with each cluster?)
-njets = 0
-
-def calc_ET(E, C_1, C_2):
-   # Eis the energy, C_1 and C_2 are component values
-   # of a triange to determine the angle theta
-   # E_T = Esin(\theta)
-   return E*np.sin(np.arctan(C_2/C_1))
-
-def calc_jetmass(jet, ep=True):
-   if ep == True:
-      # Jet constituent arrays are in the form of E, px, py, pz
-      # sum the four vectors
-      a = 0
-      b = 0
-      c = 0
-      d = 0
-      if (len(jet)) == 1:
-         return np.sqrt(jet[0][0]**2
-                      - jet[0][1]**2
-                      - jet[0][2]**2 
-                      - jet[0][3]**2)
-      for tup in jet:
-         a += tup[0]
-         b += tup[1]
-         c += tup[2]
-         d += tup[3]
-      summed = np.array([a, b, c, d])
-      # calc the invariant mass
-      return np.sqrt(summed[0]**2
-                     - summed[1]**2
-                     - summed[2]**2
-                     - summed[3]**2
-                    )
-   else:
-      # arrays are in the form of pT, eta, phi, mass
-      print("ep=False is unimplemented\n")
-
-def calc_effr(jet_mass, px, py):
-   return 2*jet_mass / np.sqrt(px**2 + py**2)
-
-def calc_eta(C_1, C_2):
-   # Again, C stands for components
-   theta = np.arctan(C_2/C_1)
-   return -1*np.log(C_2/(2*C_1))
-
-def calc_phi(C_1, C_2):
-   # C stands for componenets
-   return np.arctan(C_2/C_1)
-
-def delR(true_w, w_jet):
-   print("Function delR unimplemneted")
-   pass
-   
-def nConsts(jet):
-   #return the number of constituents in a jet
-   return len(jet)
+def get_min_max(array):
+   return (int(min(array)), int(max(array))+1)
 # -----------------------------------------------------------------------
 # Generate Events
 # -----------------------------------------------------------------------
@@ -78,7 +20,7 @@ unclustered_particles = list()
 # Generate Jets and Histogram Data
 # -----------------------------------------------------------------------
 event_data = list()
-for event in pythia(events=1):
+for event in pythia(events=10):
    vectors = event.all(selection)
    sequence = cluster(vectors, R=0.4, p=-1, ep=True)
    jets = sequence.inclusive_jets()
@@ -114,26 +56,47 @@ for event in pythia(events=1):
 # Plot of number of counts of mass of jet in the jets of that event
 jets_njets = list()
 c_v_index_to_name = {
-   0 : "Mass"
-   1 : "Eta"
-   2 : "Phi"
-   3 : "Energy"
-   4 : "Transverse Energy"
-   5 : "Transverse Momentum"
-   6 : "Number of constituents"
-   7 : "Eff r"
+   0 : "Mass",
+   1 : "Eta",
+   2 : "Phi",
+   3 : "Energy",
+   4 : "Transverse Energy",
+   5 : "Transverse Momentum",
+   6 : "Number of constituents",
+   7 : "Eff r",
+}
+c_v_index_to_units = {
+   0 : "Mass units",
+   1 : "Eta units",
+   2 : "Phi units",
+   3 : "Energy units",
+   4 : "Transverse Energy units",
+   5 : "Transverse Momentum units",
+   6 : "Number of constituents units",
+   7 : "Eff r units",
 }
 c_v_index_to_step = {
-   0 :  
-   1 e
-   2 : 
-   3 : 
-   4 : 
-   5 : 
-   6 : 
-   7 : 
+   0 : 100,
+   1 : 100,
+   2 : 100,
+   3 : 100,
+   4 : 100,
+   5 : 100,
+   6 : 100,
+   7 : 100,
 }
-c_v_index_to_range = dict()
+# To Do, remove index_to_range dict and replace with a dynamic method
+# of determining the range
+c_v_index_to_range = {
+   0 : [0, 15],
+   1 : [-10, 10],
+   2 : [-5, 5],
+   3 : [0, 1500],
+   4 : [0, 85],
+   5 : [0, 85],
+   6 : [0, 20],
+   7 : [0, 20],
+}
 for jets_elem in event_data:
    jets_properties = list()
    i = 0
@@ -148,12 +111,12 @@ for jets_elem in event_data:
          else: jets_properties[i % 8].append(physical_property)
          i += 1
    for column_variable_index in range(len(jets_properties)):
-      
       plt.hist(jets_properties[column_variable_index],
-                              100,
-                              range=[0, 768])
-      plt.title(str(column_variable_index))
-      plt.xlabel("Jet Variable Property")
-      plt.ylabel("Coutnts per event")
-      plt.savefig(str(column_variable_index)+".pdf")
+                        c_v_index_to_step[column_variable_index],
+                        range=c_v_index_to_range[column_variable_index])
+      plt.title(c_v_index_to_name[column_variable_index])
+      plt.xlabel(c_v_index_to_name[column_variable_index] + " in " +
+                              c_v_index_to_units[column_variable_index])
+      plt.ylabel("Counts per event")
+      plt.savefig(c_v_index_to_name[column_variable_index]+".png")
       plt.figure()
