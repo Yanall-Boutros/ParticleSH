@@ -39,14 +39,12 @@ for event in pythia(events=10):
       jet_data.append(int(len(jet.constituents_array())))
       jet_data.append(jet.mass*2/(np.sqrt(jet.px**2 + jet.py**2)))
       jets_data.append(np.array(jet_data))
-   jets_data.append(len(jets))
-   event_data.append(np.array(jets_data))
-# Data Structure Artchitecture Logic: event_data is the set of all jets
-# data. The cardinality of event_data = the number of events. Each member
-# in event_data is also a set. Let each member {jets} in the set of event
-# data also be a set, with the cardinality equal to the number of jets.
-# Each jet is a member in the set of jets and is an ordered set which
-# contains various physical properties of the jet 
+   event_data.append(np.array(jets_data).T)
+# event_data is an n x m x o matrix, where n is the event, m is an
+# observable of the jet (See line 53), and o is the data entry.
+# len(event_data) = number of numpythia events
+# len(event_data[0]) = number of observables
+# len(event_data[0][0]) = number of jets
 # -----------------------------------------------------------------------
 # Plot Data
 # -----------------------------------------------------------------------
@@ -54,7 +52,7 @@ for event in pythia(events=10):
 # for each physical property
 
 # Plot of number of counts of mass of jet in the jets of that event
-jets_njets = list()
+njets_in_event = list()
 c_v_index_to_name = {
    0 : "Mass",
    1 : "Eta",
@@ -97,26 +95,15 @@ c_v_index_to_range = {
    6 : [0, 20],
    7 : [0, 20],
 }
-for jets_elem in event_data:
-   jets_properties = list()
-   i = 0
-   for jet_elem in jets_elem[:-1]:
-      for physical_property in jet_elem:
-         if (len(jets_properties) == 0):
-            jets_properties.append([physical_property])
-            i += 1
-            continue
-         if i < 8:
-            jets_properties.append([physical_property])
-         else: jets_properties[i % 8].append(physical_property)
-         i += 1
-   for column_variable_index in range(len(jets_properties)):
-      plt.hist(jets_properties[column_variable_index],
-                        c_v_index_to_step[column_variable_index],
-                        range=c_v_index_to_range[column_variable_index])
-      plt.title(c_v_index_to_name[column_variable_index])
-      plt.xlabel(c_v_index_to_name[column_variable_index] + " in " +
-                              c_v_index_to_units[column_variable_index])
+for n in range(len(event_data)):
+   njets_in_event.append(event_data[n][0])
+   for m in range(len(event_data[0])):
+      plt.hist(event_data[n][m],
+                        c_v_index_to_step[m],
+                        range=c_v_index_to_range[m])
+      plt.title(c_v_index_to_name[m])
+      plt.xlabel(c_v_index_to_name[m] + " in " +
+                              c_v_index_to_units[m])
       plt.ylabel("Counts per event")
-      plt.savefig(c_v_index_to_name[column_variable_index]+".png")
+      plt.savefig(c_v_index_to_name[m]+".png")
       plt.figure()
