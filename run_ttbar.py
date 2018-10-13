@@ -8,8 +8,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from pyjet import cluster
-def get_min_max(array):
-   return (int(min(array)), int(max(array))+1)
+
 # -----------------------------------------------------------------------
 # Generate Events
 # -----------------------------------------------------------------------
@@ -83,27 +82,26 @@ c_v_index_to_step = {
    6 : 100,
    7 : 100,
 }
-# To Do, remove index_to_range dict and replace with a dynamic method
-# of determining the range
-c_v_index_to_range = {
-   0 : [0, 15],
-   1 : [-10, 10],
-   2 : [-5, 5],
-   3 : [0, 1500],
-   4 : [0, 85],
-   5 : [0, 85],
-   6 : [0, 20],
-   7 : [0, 20],
-}
+# Function to determine the range of an array for histogram
+def get_min_max(array):
+   return [int(min(array)), int(max(array))+6]
+
 for n in range(len(event_data)):
-   njets_in_event.append(event_data[n][0])
+   njets_in_event.append(len(event_data[n][0]))
    for m in range(len(event_data[0])):
+      r = get_min_max(event_data[n][m])
       plt.hist(event_data[n][m],
                         c_v_index_to_step[m],
-                        range=c_v_index_to_range[m])
+                        range=r)
       plt.title(c_v_index_to_name[m])
       plt.xlabel(c_v_index_to_name[m] + " in " +
                               c_v_index_to_units[m])
       plt.ylabel("Counts per event")
       plt.savefig(c_v_index_to_name[m]+".png")
       plt.figure()
+njets_in_event = np.array(njets_in_event)
+plt.hist(np.array(range(10)), njets_in_event)
+plt.title("Number of jets in each event")
+plt.xlabel("Event Number")
+plt.ylabel("Counts per Event")
+plt.savefig("Number of Jets by Event.png")
