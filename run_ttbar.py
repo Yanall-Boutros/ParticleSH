@@ -63,14 +63,14 @@ c_v_index_to_name = {
    7 : "Eff r",
 }
 c_v_index_to_units = {
-   0 : "Mass units",
-   1 : "Eta units",
-   2 : "Phi units",
-   3 : "Energy units",
-   4 : "Transverse Energy units",
-   5 : "Transverse Momentum units",
+   0 : "GeV",
+   1 : "Degrees",
+   2 : "Degrees",
+   3 : "$Kg m^2/s^2$",
+   4 : "Kg m^2/s^2",
+   5 : "Kg m/s",
    6 : "Number of constituents units",
-   7 : "Eff r units",
+   7 : "s/m",
 }
 c_v_index_to_step = {
    0 : 100,
@@ -104,6 +104,7 @@ for n in range(len(event_data)):
       plt.ylabel("Counts per event")
       plt.savefig(c_v_index_to_name[m]+".png")
       plt.figure()
+# plot the number of jets inside each event
 njets_in_event = np.array(njets_in_event)
 plt.hist(njets_in_event, np.array(range(10)))
 plt.title("Number of jets in each event")
