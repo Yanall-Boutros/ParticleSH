@@ -82,13 +82,18 @@ c_v_index_to_step = {
    6 : 100,
    7 : 100,
 }
+# Aggregate data list
+agg_data = [[], [], [], [], [], [], [], []]
 # Function to determine the range of an array for histogram
 def get_min_max(array):
    return [int(min(array)), int(max(array))+6]
 
 for n in range(len(event_data)):
    njets_in_event.append(len(event_data[n][0]))
-   for m in range(len(event_data[0])):
+   for m in range(len(event_data[0])): # len should be const vald at 8
+      # Extend Aggregate Data
+      agg_data[m].extend(event_data[n][m])
+      # Plot data on this index
       r = get_min_max(event_data[n][m])
       plt.hist(event_data[n][m],
                         c_v_index_to_step[m],
@@ -100,8 +105,18 @@ for n in range(len(event_data)):
       plt.savefig(c_v_index_to_name[m]+".png")
       plt.figure()
 njets_in_event = np.array(njets_in_event)
-plt.hist(np.array(range(10)), njets_in_event)
+plt.hist(njets_in_event, np.array(range(10)))
 plt.title("Number of jets in each event")
 plt.xlabel("Event Number")
 plt.ylabel("Counts per Event")
 plt.savefig("Number of Jets by Event.png")
+# plot the aggregate data
+for o in range(len(agg_data)):
+   r = get_min_max(agg_data[o])
+   plt.hist(agg_data[o], 1000, range=r)
+   plt.title("Aggregate " + c_v_index_to_name[o])
+   plt.xlabel(c_v_index_to_name[0])
+   plt.ylabel("Counts")
+   plt.savefig("Aggregate " + c_v_index_to_name[o] +".png")
+   plt.figure()
+
