@@ -102,7 +102,7 @@ for n in range(len(event_data)):
       plt.xlabel(c_v_index_to_name[m] + " in " +
                               c_v_index_to_units[m])
       plt.ylabel("Counts per event")
-      plt.savefig(c_v_index_to_name[m]+".png")
+      plt.savefig("Event " + str(n) + " - "+ c_v_index_to_name[m]+".png")
       plt.figure()
 # plot the number of jets inside each event
 njets_in_event = np.array(njets_in_event)
