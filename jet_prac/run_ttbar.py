@@ -21,7 +21,7 @@ unclustered_particles = list()
 event_data = []
 jets_data = []
 # Change lists to using 
-for event in pythia(events=100):
+for event in pythia(events=10000):
    vectors = event.all(selection)
    sequence = cluster(vectors, R=0.4, p=-1, ep=True)
    jets = sequence.inclusive_jets()
@@ -64,13 +64,13 @@ def get_min_max(array):
    return [int(min(array)), int(max(array))+6]
 for i,(name,units) in enumerate(columns):
    fig, ax = plt.subplots()
-   ax.hist(event_data[:,i])
+   ax.hist(event_data[:,i], bins=150)
    ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
    ax.set_ylabel('Events')
    fig.savefig('{0:s}_event.png'.format(name))
 
    fig, ax = plt.subplots()
-   ax.hist(jets_data[:,i])
+   ax.hist(jets_data[:,i], 300)
    ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
    ax.set_ylabel('Jets')
    fig.savefig('{0:s}_jets.png'.format(name))
