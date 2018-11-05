@@ -67,10 +67,12 @@ for i,(name,units) in enumerate(columns):
    ax.hist(event_data[:,i], bins=150)
    ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
    ax.set_ylabel('Events')
+   plt.title("Leading Jet Data")
    fig.savefig('{0:s}_event.png'.format(name))
 
    fig, ax = plt.subplots()
    ax.hist(jets_data[:,i], 300)
+   plt.title("Aggregate Data")
    ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
    ax.set_ylabel('Jets')
    fig.savefig('{0:s}_jets.png'.format(name))
