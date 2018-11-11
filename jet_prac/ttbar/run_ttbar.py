@@ -17,9 +17,13 @@ unclustered_particles = list()
 # -----------------------------------------------------------------------
 # Generate Jets and Histogram Data
 # -----------------------------------------------------------------------
+def is_massless_and_isolated(jet):
+   # Returns true if a jet has nconsts = 1 and has a pdgid equal to that
+   # of a photon or a gluon, (todo: When to also discard muons)
+   return len(jet.constituents_array()) == 0 and (jet.info['pdgid'] == 21 or jet.info['pdgid'] == 22)
 event_data = []
 jets_data = []
-# Change lists to using 
+discarded_data = [] 
 for event in pythia(events=1000):
    vectors = event.all(selection)
    sequence = cluster(vectors, R=0.4, p=-1, ep=True)
@@ -30,15 +34,25 @@ for event in pythia(events=1000):
               jet.mass, jet.eta, jet.phi, jet.pt,
               len(jet.constituents_array()), 2*jet.mass/jet.pt
              )
-      # Append Leading Jet information
-      if i == 0:
-         event_data.append(data)
-      jets_data.append(data)
+      if is_massless_and_isolated(jet):
+         discarded_data.append(data)
+      else:
+         # Append Leading Jet information
+         if i == 0:
+            event_data.append(data)
+         jets_data.append(data)
 columns = [
            ("Mass", "GeV"), ("Eta", ""), ("Phi", ""),
            ("Transverse Momentum", "GeV"),
            ("Number of constituents", ""), ("Eff Radius", "")
           ]
+leading_ranges = [
+                  (-1,100), (-5,5), (-4,4), (-5,800), (-1,80),
+                  (-0.25, 0.75)
+                 ]
+agg_ranges = [
+              (-1,100), (-15,15), (-4,4), (-5,100), (-1,40), (-0.25,1.25)
+             ]
 nbins = [100]*len(columns)
 event_data = np.array(event_data)
 jets_data = np.array(jets_data)
@@ -48,23 +62,76 @@ jets_data = np.array(jets_data)
 # Create a histogram of counts per event with respect to the event number
 # for each physical property
 # Plot of number of counts of mass of jet in the jets of that event
-njets_in_event = list()
-# Aggregate data list
-agg_data = [[], [], [], [], [], [], [], []]
-# Function to determine the range of an array for histogram
-def get_min_max(array):
-   return [int(min(array)), int(max(array))+6]
 for i,(name,units) in enumerate(columns):
-   fig, ax = plt.subplots()
-   ax.hist(event_data[:,i], bins=150)
-   ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
-   ax.set_ylabel('Events')
-   plt.title("Leading Jet Data")
-   fig.savefig('{0:s}_event.png'.format(name))
+   # Plot the same data but in the 0-10GeV range for Transverse Momentum
+   # and Mass. As well as plot the entire data put with 5GeV increments
+   if i == 0 or i == 3:
+      # length of range divided by 5 = num of bins
+      b_l = int((leading_ranges[i][1] - leading_ranges[i][0])/5)+1
+      b_a = int((agg_ranges[i][1] - agg_ranges[i][0])/5)+1
+      # plot the 10GeV range for for leading jet data
+      fig, ax = plt.subplots()
+      r = (-1, 10)
+      if i == 3: r=(-1, 100)
+      ax.hist(event_data[:,i], bins=nbins[i], range=r)
+      plt.title("Leading Jet Data 0-10GeV")
+      ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
+      ax.set_ylabel('Jets')
+      fig.savefig('{0:s}_event10GeV.png'.format(name))
 
-   fig, ax = plt.subplots()
-   ax.hist(jets_data[:,i], 300)
-   plt.title("Aggregate Data")
-   ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
-   ax.set_ylabel('Jets')
-   fig.savefig('{0:s}_jets.png'.format(name))
+      # plot the 10GeV range for aggregate data
+      fig, ax = plt.subplots()
+      ax.hist(jets_data[:,i], bins=nbins[i], range=r)
+      plt.title("Aggregate Data 0-10Gev")
+      ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
+      ax.set_ylabel('Jets')
+      fig.savefig('{0:s}_jets10GeV.png'.format(name))
+      
+      # plot the standard ranges.
+      # Plot the data from each leading jet in each event
+      fig, ax = plt.subplots()
+      ax.hist(event_data[:,i], bins=nbins[i], range=leading_ranges[i])
+      ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
+      ax.set_ylabel('Events')
+      plt.title("Leading Jet Data 5th binning")
+      fig.savefig('{0:s}_event.png'.format(name))
+      
+      # Plot the data from all the jets in all events
+      fig, ax = plt.subplots()
+      ax.hist(jets_data[:,i], bins=nbins[i], range=agg_ranges[i])
+      plt.title("Aggregate Data")
+      ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
+      ax.set_ylabel('Jets')
+      fig.savefig('{0:s}_jets.png'.format(name))
+      
+      # Plots with increments being 5GeV
+      # Plot the data from each leading jet in each event
+      fig, ax = plt.subplots()
+      ax.hist(event_data[:,i], bins=nbins[i], range=leading_ranges[i])
+      ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
+      ax.set_ylabel('Events')
+      plt.title("Leading Jet Data")
+      fig.savefig('{0:s}_event_by_5.png'.format(name))
+      
+      # Plot the data from all the jets in all events
+      fig, ax = plt.subplots()
+      ax.hist(jets_data[:,i], bins=b_a, range=agg_ranges[i])
+      plt.title("Aggregate Data 5th binning")
+      ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
+      ax.set_ylabel('Jets')
+      fig.savefig('{0:s}_jets_by_5.png'.format(name))
+   else: 
+       # Plot the data from each leading jet in each event
+       fig, ax = plt.subplots()
+       ax.hist(event_data[:,i], bins=nbins[i], range=leading_ranges[i])
+       ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
+       ax.set_ylabel('Events')
+       plt.title("Leading Jet Data")
+       fig.savefig('{0:s}_event.png'.format(name))
+       # Plot the data from all the jets in all events
+       fig, ax = plt.subplots()
+       ax.hist(jets_data[:,i], bins=nbins[i], range=agg_ranges[i])
+       plt.title("Aggregate Data")
+       ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
+       ax.set_ylabel('Jets')
+       fig.savefig('{0:s}_jets.png'.format(name))
