@@ -71,21 +71,26 @@ for i,(name,units) in enumerate(columns):
       b_a = int((agg_ranges[i][1] - agg_ranges[i][0])/5)+1
       # plot the 10GeV range for for leading jet data
       fig, ax = plt.subplots()
-      r = (-1, 10)
-      if i == 3: r=(-1, 100)
+      r = (-1, 10) # Set the range to 10 GeV
+      ag_tit = "Aggregate Data 0-10Gev"
+      lead_tit = "Leading Jet Data 0-10GeV"
+      if i == 3: # Unless we're plotting the Momentum
+         r=(-1, 100) # then set the range to -1 to 100
+         ag_tit = "Aggregate Data 0-100Gev" # and adjust the titles
+         lead_tit = "Leading Jet Data 0-100GeV" # accordingly
       ax.hist(event_data[:,i], bins=nbins[i], range=r)
-      plt.title("Leading Jet Data 0-10GeV")
+      plt.title(lead_tit)
       ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
       ax.set_ylabel('Jets')
-      fig.savefig('{0:s}_event10GeV.png'.format(name))
+      plt.savefig('{0:s}_event10GeV.png'.format(name))
 
       # plot the 10GeV range for aggregate data
       fig, ax = plt.subplots()
       ax.hist(jets_data[:,i], bins=nbins[i], range=r)
-      plt.title("Aggregate Data 0-10Gev")
+      plt.title(ag_tit)
       ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
       ax.set_ylabel('Jets')
-      fig.savefig('{0:s}_jets10GeV.png'.format(name))
+      plt.savefig('{0:s}_jets10GeV.png'.format(name))
       
       # plot the standard ranges.
       # Plot the data from each leading jet in each event
@@ -93,8 +98,8 @@ for i,(name,units) in enumerate(columns):
       ax.hist(event_data[:,i], bins=nbins[i], range=leading_ranges[i])
       ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
       ax.set_ylabel('Events')
-      plt.title("Leading Jet Data 5th binning")
-      fig.savefig('{0:s}_event.png'.format(name))
+      plt.title("Leading Jet Data")
+      plt.savefig('{0:s}_event.png'.format(name))
       
       # Plot the data from all the jets in all events
       fig, ax = plt.subplots()
@@ -102,24 +107,24 @@ for i,(name,units) in enumerate(columns):
       plt.title("Aggregate Data")
       ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
       ax.set_ylabel('Jets')
-      fig.savefig('{0:s}_jets.png'.format(name))
+      plt.savefig('{0:s}_jets.png'.format(name))
       
       # Plots with increments being 5GeV
       # Plot the data from each leading jet in each event
       fig, ax = plt.subplots()
-      ax.hist(event_data[:,i], bins=nbins[i], range=leading_ranges[i])
+      ax.hist(event_data[:,i], bins=b_l, range=leading_ranges[i])
       ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
       ax.set_ylabel('Events')
-      plt.title("Leading Jet Data")
-      fig.savefig('{0:s}_event_by_5.png'.format(name))
+      plt.title("Leading Jet Data (bin width = 5 GeV)")
+      plt.savefig('{0:s}_event_by_5.png'.format(name))
       
       # Plot the data from all the jets in all events
       fig, ax = plt.subplots()
       ax.hist(jets_data[:,i], bins=b_a, range=agg_ranges[i])
-      plt.title("Aggregate Data 5th binning")
+      plt.title("Aggregate Data (bin width = 5 GeV)")
       ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
       ax.set_ylabel('Jets')
-      fig.savefig('{0:s}_jets_by_5.png'.format(name))
+      plt.savefig('{0:s}_jets_by_5.png'.format(name))
    else: 
        # Plot the data from each leading jet in each event
        fig, ax = plt.subplots()
@@ -127,11 +132,11 @@ for i,(name,units) in enumerate(columns):
        ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
        ax.set_ylabel('Events')
        plt.title("Leading Jet Data")
-       fig.savefig('{0:s}_event.png'.format(name))
+       plt.savefig('{0:s}_event.png'.format(name))
        # Plot the data from all the jets in all events
        fig, ax = plt.subplots()
        ax.hist(jets_data[:,i], bins=nbins[i], range=agg_ranges[i])
        plt.title("Aggregate Data")
        ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
        ax.set_ylabel('Jets')
-       fig.savefig('{0:s}_jets.png'.format(name))
+       plt.savefig('{0:s}_jets.png'.format(name))
