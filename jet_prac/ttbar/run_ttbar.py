@@ -20,11 +20,14 @@ unclustered_particles = list()
 def is_massless_and_isolated(jet):
    # Returns true if a jet has nconsts = 1 and has a pdgid equal to that
    # of a photon or a gluon, (todo: When to also discard muons)
-   return len(jet.constituents_array()) == 0 and (jet.info['pdgid'] == 21 or jet.info['pdgid'] == 22)
+   if len(jet.constituents_array()) == 0: 
+      if np.abs(jet.info['pdgid']) == 21 or np.abs(jet.info['pdgid']) == 22:
+         return True
+      return np.abs(jet.info['pdgid']) == 13 and 2*jet.mass/jet.pt > 0.4
 event_data = []
 jets_data = []
 discarded_data = [] 
-for event in pythia(events=1000):
+for event in pythia(events=10000):
    vectors = event.all(selection)
    sequence = cluster(vectors, R=0.4, p=-1, ep=True)
    jets = sequence.inclusive_jets()
@@ -64,7 +67,7 @@ jets_data = np.array(jets_data)
 # Plot of number of counts of mass of jet in the jets of that event
 for i,(name,units) in enumerate(columns):
    # Plot the same data but in the 0-10GeV range for Transverse Momentum
-   # and Mass. As well as plot the entire data put with 5GeV increments
+   # and Mass. As well as plot the entire data but with 5GeV increments
    if i == 0 or i == 3:
       # length of range divided by 5 = num of bins
       b_l = int((leading_ranges[i][1] - leading_ranges[i][0])/5)+1
