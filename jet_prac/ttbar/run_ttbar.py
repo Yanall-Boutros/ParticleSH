@@ -17,13 +17,16 @@ unclustered_particles = list()
 # -----------------------------------------------------------------------
 # Generate Jets and Histogram Data
 # -----------------------------------------------------------------------
-def is_massless_and_isolated(jet):
+def is_massless_or_isolated(jet):
    # Returns true if a jet has nconsts = 1 and has a pdgid equal to that
    # of a photon or a gluon, (todo: When to also discard muons)
    if len(jet.constituents_array()) == 1: 
       if np.abs(jet.info['pdgid']) == 21 or np.abs(jet.info['pdgid']) == 22:
          return True
-      return np.abs(jet.info['pdgid']) == 13 and 2*jet.mass/jet.pt > 0.4
+      if (np.abs(jet.info['pdgid']) == 13 and 2*jet.mass/jet.pt > 0.4):
+         return True
+   if jet.mass < 0.4:
+      return True
 event_data = []
 jets_data = []
 discarded_data = [] 
@@ -37,7 +40,7 @@ for event in pythia(events=10000):
               jet.mass, jet.eta, jet.phi, jet.pt,
               len(jet.constituents_array()), 2*jet.mass/jet.pt
              )
-      if is_massless_and_isolated(jet):
+      if is_massless_or_isolated(jet):
          discarded_data.append(data)
       else:
          # Append Leading Jet information
@@ -54,7 +57,7 @@ leading_ranges = [
                   (-0.25, 0.75)
                  ]
 agg_ranges = [
-              (-1,100), (-15,15), (-4,4), (-5,100), (-1,40), (-0.25,1.25)
+              (-1,100), (-15,15), (-4,4), (-5,100), (-1,40), (-0.25,40)
              ]
 nbins = [100]*len(columns)
 event_data = np.array(event_data)
@@ -115,7 +118,7 @@ for i,(name,units) in enumerate(columns):
       # Plots with increments being 5GeV
       # Plot the data from each leading jet in each event
       fig, ax = plt.subplots()
-      ax.hist(event_data[:,i], bins=b_l, range=leading_ranges[i])
+      ax.hist(event_data[:,i], bins=(range(-1, int(max(event_data[:,i])) + 5, 5)))
       ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
       ax.set_ylabel('Events')
       plt.title("Leading Jet Data (bin width = 5 GeV)")
@@ -123,7 +126,7 @@ for i,(name,units) in enumerate(columns):
       
       # Plot the data from all the jets in all events
       fig, ax = plt.subplots()
-      ax.hist(jets_data[:,i], bins=b_a, range=agg_ranges[i])
+      ax.hist(jets_data[:,i], bins=(range(-1, int(max(jets_data[:,i])) + 5, 5)))
       plt.title("Aggregate Data (bin width = 5 GeV)")
       ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
       ax.set_ylabel('Jets')
