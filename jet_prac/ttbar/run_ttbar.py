@@ -20,13 +20,13 @@ unclustered_particles = list()
 def is_massless_or_isolated(jet):
    # Returns true if a jet has nconsts = 1 and has a pdgid equal to that
    # of a photon or a gluon, (todo: When to also discard muons)
+   if jet.mass < 0.4:
+      return True
    if len(jet.constituents_array()) == 1: 
       if np.abs(jet.info['pdgid']) == 21 or np.abs(jet.info['pdgid']) == 22:
          return True
-      if (np.abs(jet.info['pdgid']) == 13 and 2*jet.mass/jet.pt > 0.4):
-         return True
-   if jet.mass < 0.4:
-      return True
+      # if a muon is outside of the radius of the jet, discard it
+      return np.abs(jet.info['pdgid']) == 13 and 2*jet.mass/jet.pt > 0.4
 event_data = []
 jets_data = []
 discarded_data = [] 
