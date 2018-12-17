@@ -19,17 +19,25 @@ unclustered_particles = list()
 # -----------------------------------------------------------------------
 def is_massless_or_isolated(jet):
    # Returns true if a jet has nconsts = 1 and has a pdgid equal to that
-   # of a photon or a gluon, (todo: When to also discard muons)
-   if jet.mass < 0.4:
-      return True
+   # of a photon or a gluon
    if len(jet.constituents_array()) == 1: 
       if np.abs(jet.info['pdgid']) == 21 or np.abs(jet.info['pdgid']) == 22:
          return True
       # if a muon is outside of the radius of the jet, discard it
-      return np.abs(jet.info['pdgid']) == 13 and 2*jet.mass/jet.pt > 0.4
+      if np.abs(jet.info['pdgid']) == 13:
+         if 2*jet.mass/jet.pt > 0.4: return True
+   # Remove Jets with too high an eta
+   if np.abs(jet.eta) > 5.0:
+      return True
+   # Remove any jets less than an arbitrary near zero mass
+   if jet.mass < 0.4:
+      return True
 event_data = []
 jets_data = []
 discarded_data = [] 
+# -----------------------------------------------------------------------
+# Main Loop for Storing Jet Data
+# -----------------------------------------------------------------------
 for event in pythia(events=10000):
    vectors = event.all(selection)
    sequence = cluster(vectors, R=0.4, p=-1, ep=True)
@@ -41,23 +49,26 @@ for event in pythia(events=10000):
               len(jet.constituents_array()), 2*jet.mass/jet.pt
              )
       if is_massless_or_isolated(jet):
-         discarded_data.append(data)
+         discarded_data.append((jet, data))
       else:
          # Append Leading Jet information
          if i == 0:
             event_data.append(data)
          jets_data.append(data)
+# -----------------------------------------------------------------------
+# Graph Labels and Ranges
+# -----------------------------------------------------------------------
 columns = [
            ("Mass", "GeV"), ("Eta", ""), ("Phi", ""),
            ("Transverse Momentum", "GeV"),
            ("Number of constituents", ""), ("Eff Radius", "")
           ]
 leading_ranges = [
-                  (-1,100), (-5,5), (-4,4), (-5,800), (-1,80),
+                  (-1,100), (-5,5), (-4,4), (-5,800), (-0.5,81.5),
                   (-0.25, 0.75)
                  ]
 agg_ranges = [
-              (-1,100), (-15,15), (-4,4), (-5,100), (-1,40), (-0.25,40)
+              (-1,100), (-15,15), (-4,4), (-5,100), (-0.5,41.5), (-0.25,40)
              ]
 nbins = [100]*len(columns)
 event_data = np.array(event_data)
@@ -131,6 +142,13 @@ for i,(name,units) in enumerate(columns):
       ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
       ax.set_ylabel('Jets')
       plt.savefig('{0:s}_jets_by_5.png'.format(name))
+      
+      fig, ax = plt.subplots()
+      ax.hist(np.log(jets_data[:,i]))
+      plt.title("Natural Log of Aggregate Data")
+      ax.set_xlabel('ln of {0:s} [{1:s}]'.format(name, units))
+      ax.set_ylabel('Jets')
+      plt.savefig('{0:s}_log_jets.png'.format(name))
    else: 
        # Plot the data from each leading jet in each event
        fig, ax = plt.subplots()
@@ -146,3 +164,10 @@ for i,(name,units) in enumerate(columns):
        ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
        ax.set_ylabel('Jets')
        plt.savefig('{0:s}_jets.png'.format(name))
+       # Add Log Graphs for aggregate graphs
+       fig, ax = plt.subplots()
+       ax.hist(np.log(jets_data[:,i]))
+       plt.title("Natural Log of Aggregate Data")
+       ax.set_xlabel('ln of {0:s} [{1:s}]'.format(name, units))
+       ax.set_ylabel('Jets')
+       plt.savefig('{0:s}_log_jets.png'.format(name))
