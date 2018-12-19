@@ -71,6 +71,7 @@ agg_ranges = [
               (-1,100), (-15,15), (-4,4), (-5,100), (-0.5,41.5), (-0.25,40)
              ]
 nbins = [100]*len(columns)
+nbins[4] = 21
 event_data = np.array(event_data)
 jets_data = np.array(jets_data)
 # -----------------------------------------------------------------------
@@ -144,10 +145,11 @@ for i,(name,units) in enumerate(columns):
       plt.savefig('{0:s}_jets_by_5.png'.format(name))
       
       fig, ax = plt.subplots()
-      ax.hist(np.log(jets_data[:,i]))
-      plt.title("Natural Log of Aggregate Data")
-      ax.set_xlabel('ln of {0:s} [{1:s}]'.format(name, units))
+      ax.hist(jets_data[:,i], bins=nbins[i], range=agg_ranges[i])
+      plt.title("Aggregate Data (log scale)")
+      ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
       ax.set_ylabel('Jets')
+      plt.yscale('log', nonposy='clip')
       plt.savefig('{0:s}_log_jets.png'.format(name))
    else: 
        # Plot the data from each leading jet in each event
@@ -164,10 +166,11 @@ for i,(name,units) in enumerate(columns):
        ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
        ax.set_ylabel('Jets')
        plt.savefig('{0:s}_jets.png'.format(name))
-       # Add Log Graphs for aggregate graphs
+       # Plot the log data for all events
        fig, ax = plt.subplots()
-       ax.hist(np.log(jets_data[:,i]))
-       plt.title("Natural Log of Aggregate Data")
-       ax.set_xlabel('ln of {0:s} [{1:s}]'.format(name, units))
+       ax.hist(jets_data[:,i], bins=nbins[i], range=agg_ranges[i])
+       plt.title("Aggregate Data (log scale)")
+       ax.set_xlabel('{0:s} [{1:s}]'.format(name, units))
        ax.set_ylabel('Jets')
+       plt.yscale('log', nonposy='clip')
        plt.savefig('{0:s}_log_jets.png'.format(name))
