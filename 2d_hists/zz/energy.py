@@ -22,7 +22,7 @@ def allequs(jet):
 # -----------------------------------------------------------------------
 # Generate Events
 # -----------------------------------------------------------------------
-pythia = Pythia('ttbar.cmnd', random_state=1)
+pythia = Pythia('zz.cmnd', random_state=1)
 selection = ((STATUS == 1) & ~HAS_END_VERTEX)
 unclustered_particles = list()
 # -----------------------------------------------------------------------
@@ -78,10 +78,10 @@ jet_ydata = np.array(jets_data[1])
 jet_zdata = np.array(jets_data[2])
 
 fig = plt.figure()
-plt.hist2d(leading_xdata, leading_ydata, range=[(-5,5),
-    (-1*np.pi, np.pi)],
-    bins=10)
+plt.hist2d(leading_xdata, leading_ydata,
+        range=[(-13,13), (-np.pi, np.pi)],
+        bins=10)
 plt.xlabel("$\eta$")
 plt.ylabel("$\phi$")
-plt.title("$T\overline{T}$")
+plt.title("ZZ")
 plt.savefig("Test.pdf")
