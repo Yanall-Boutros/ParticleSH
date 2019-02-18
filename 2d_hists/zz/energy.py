@@ -8,7 +8,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from pyjet import cluster
-from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.colors import ListedColormap
 def print_debug_data(dd):
     for tup in dd:
         j = tup[1]
@@ -19,6 +19,20 @@ def allequs(jet):
     if mag == eng and eng == jet.e:
         return True
     return False
+# -----------------------------------------------------------------------
+# Load Colormap info
+# -----------------------------------------------------------------------
+chans = open("colormap.txt", 'r') # Credit to Ian Heywood for the 
+for chan in chans: exec(chan) # Python implementation of CubeHelix
+                              # Green, D. A., 2011, `A colour scheme for
+                              # the display of astronomical intensity
+                              # images', Bulletin of the Astronomical
+                              #  Society of India, 39, 289.
+                              # (2011BASI...39..289G at ADS.) 
+ctab = []
+for i in range(len(r_chan)):
+    ctab.append([r_chan[i], g_chan[i], b_chan[i]])
+cubehelixcm = ListedColormap(ctab,name='cubehelix', N=None)
 # -----------------------------------------------------------------------
 # Generate Events
 # -----------------------------------------------------------------------
@@ -76,12 +90,13 @@ leading_zdata = np.array(leading_data[2])
 jet_xdata = np.array(jets_data[0])
 jet_ydata = np.array(jets_data[1])
 jet_zdata = np.array(jets_data[2])
-
-fig = plt.figure()
+plt.figure()
 plt.hist2d(leading_xdata, leading_ydata,
-        range=[(-13,13), (-np.pi, np.pi)],
-        bins=10)
+    range=[(-5,5),(-1*np.pi, np.pi)],
+    bins=(50, 50), cmap='cubehelix')
+#cax = ax.imshow((leading_xdata, leading_ydata), cmap=
 plt.xlabel("$\eta$")
 plt.ylabel("$\phi$")
-plt.title("ZZ")
+plt.title("$ZZ$")
+plt.colorbar()
 plt.savefig("Test.pdf")
