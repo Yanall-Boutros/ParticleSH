@@ -99,4 +99,10 @@ plt.xlabel("$\eta$")
 plt.ylabel("$\phi$")
 plt.title("$ZZ$")
 plt.colorbar()
-plt.savefig("Test.pdf")
+plt.savefig("LeadingZZ.pdf")
+plt.figure()
+plt.hist2d(jet_xdata, jet_ydata,
+    range=[(-5,5),(-1*np.pi, np.pi)],
+    bins=(50, 50), cmap='cubehelix')
+plt.colorbar()
+plt.savefig("AggregateZZ.pdf")

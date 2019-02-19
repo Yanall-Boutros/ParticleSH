@@ -99,4 +99,10 @@ plt.xlabel("$\eta$")
 plt.ylabel("$\phi$")
 plt.title("$T\overline{T}$")
 plt.colorbar()
-plt.savefig("Test.pdf")
+plt.savefig("Leading_TTbar.pdf")
+plt.figure()
+plt.hist2d(jet_xdata, jet_ydata,
+    range=[(-5,5),(-1*np.pi, np.pi)],
+    bins=(50, 50), cmap='cubehelix')
+plt.colorbar()
+plt.savefig("Aggregate_TTbar.pdf")
