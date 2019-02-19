@@ -104,5 +104,8 @@ plt.figure()
 plt.hist2d(jet_xdata, jet_ydata,
     range=[(-5,5),(-1*np.pi, np.pi)],
     bins=(50, 50), cmap='cubehelix')
+plt.xlabel("$\eta$")
+plt.ylabel("$\phi$")
+plt.title("$ZZ$")
 plt.colorbar()
 plt.savefig("AggregateZZ.pdf")
