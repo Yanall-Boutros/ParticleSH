@@ -67,21 +67,15 @@ def return_particle_data(jet):
     pt = np.array(pt)
     e = (pt**2 + m**2)**0.5
     return [eta, phi, e]
-debug_data = []
-leading_data = []
-leading_particle_eta = []
-leading_particle_phi = []
-leading_particle_energy = []
-jets_data = []
-jets_particle_eta = []
-jets_particle_phi = []
-jets_particle_energy = []
 discarded_data = [] 
 # -----------------------------------------------------------------------
 # Main Loop for Storing Jet Data
 # -----------------------------------------------------------------------
 a = 0
 for event in pythia(events=10):
+    jets_particle_eta = []
+    jets_particle_phi = []
+    jets_particle_energy = []
     vectors = event.all(selection)
     sequence = cluster(vectors, R=0.4, p=-1, ep=True)
     jets = sequence.inclusive_jets()
@@ -102,10 +96,11 @@ for event in pythia(events=10):
     plt.hist2d(jets_particle_eta, jets_particle_phi,
            weights=jets_particle_energy,
            range=[(-5,5),(-1*np.pi,np.pi)],
-           bins=(5,5), cmap='cubehelix')
+           bins=(20,32), cmap='cubehelix')
     plt.xlabel("$\eta$")
     plt.ylabel("$\phi$")
     plt.title("$ZZ$")
-    plt.colorbar()
+    cbar = plt.colorbar()
+    cbar.set_label('Tranverse Energy ($GeV$)')
     plt.savefig("Jets_Particles_ZZ"+str(a)+".png")
     a += 1

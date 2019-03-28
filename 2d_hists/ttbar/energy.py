@@ -100,6 +100,7 @@ for event in pythia(events=10):
     plt.xlabel("$\eta$")
     plt.ylabel("$\phi$")
     plt.title("$T\overline{T}$")
-    plt.colorbar()
+    cbar = plt.colorbar()
+    cbar.set_label('Tranverse Energy ($GeV$)')
     plt.savefig("Jets_Particles_TTbar"+str(a)+".png")
     a += 1
