@@ -11,20 +11,6 @@ from pyjet import cluster
 from matplotlib.colors import ListedColormap
 id = 'pdgid'
 # -----------------------------------------------------------------------
-# Load Colormap info
-# -----------------------------------------------------------------------
-chans = open("colormap.txt", 'r') # Credit to Ian Heywood for the 
-for chan in chans: exec(chan) # Python implementation of CubeHelix
-                              # Green, D. A., 2011, `A colour scheme for
-                              # the display of astronomical intensity
-                              # images', Bulletin of the Astronomical
-                              #  Society of India, 39, 289.
-                              # (2011BASI...39..289G at ADS.) 
-ctab = []
-for i in range(len(r_chan)):
-    ctab.append([r_chan[i], g_chan[i], b_chan[i]])
-cubehelixcm = ListedColormap(ctab,name='cubehelix', N=None)
-# -----------------------------------------------------------------------
 # Generate Events
 # -----------------------------------------------------------------------
 pythia = Pythia('ttbar.cmnd', random_state=1)
@@ -96,11 +82,11 @@ for event in pythia(events=10):
     plt.hist2d(jets_particle_eta, jets_particle_phi,
            weights=jets_particle_energy,
            range=[(-5,5),(-1*np.pi,np.pi)],
-           bins=(20,32), cmap='cubehelix')
+           bins=(20,32), cmap='plasma')
     plt.xlabel("$\eta$")
     plt.ylabel("$\phi$")
-    plt.title("$T\overline{T}$")
+    plt.title("Particles from $T\overline{T}$")
     cbar = plt.colorbar()
-    cbar.set_label('Tranverse Energy ($GeV$)')
+    cbar.set_label('Tranverse Energy of Each Particle ($GeV$)')
     plt.savefig("Jets_Particles_TTbar"+str(a)+".png")
     a += 1
