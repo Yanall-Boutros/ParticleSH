@@ -11,6 +11,7 @@ from pyjet import cluster
 from matplotlib.colors import ListedColormap
 import tensorflow as tf
 id = 'pdgid'
+discarded_data = [] 
 # -----------------------------------------------------------------------
 # Initalize
 # -----------------------------------------------------------------------
@@ -56,7 +57,7 @@ def return_particle_data(jet):
     pt = np.array(pt)
     e = (pt**2 + m**2)**0.5
     return [eta, phi, e]
-def pythia_sim(cmd_file, part_name):
+def pythia_sim(cmd_file, part_name, make_plots=False):
     pythia = Pythia(cmd_file, random_state=1)
     selection = ((STATUS == 1) & ~HAS_END_VERTEX)
     unclustered_particles = list()
@@ -87,12 +88,13 @@ def pythia_sim(cmd_file, part_name):
                     weights=jets_particle_energy,
                     range=[(-5,5),(-1*np.pi,np.pi)],
                     bins=(20,32), cmap='plasma')[0])
-        #plt.xlabel("$\eta$")
-        #plt.ylabel("$\phi$")
-        #plt.title("Particles from "+part_name)
-        #cbar = plt.colorbar()
-        #cbar.set_label('Tranverse Energy of Each Particle ($GeV$)')
-        #plt.savefig("hists/Jets_Particles_"+part_name+str(a)+".png")
+        if make_plots:
+            plt.xlabel("$\eta$")
+            plt.ylabel("$\phi$")
+            plt.title("Particles from "+part_name)
+            cbar = plt.colorbar()
+            cbar.set_label('Tranverse Energy of Each Particle ($GeV$)')
+            plt.savefig("hists/Jets_Particles_"+part_name+str(a)+".png")
         a += 1
     return np.array(part_tensor)
 
@@ -125,7 +127,6 @@ def shuffle_and_stich(A, B, X, Y):
     T_i = np.array(T_i)
     T_o = np.array(T_o)
     return T_i, T_o
-discarded_data = [] 
 # -----------------------------------------------------------------------
 # Main process for generating tensor data
 # -----------------------------------------------------------------------
