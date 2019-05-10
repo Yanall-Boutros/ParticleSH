@@ -12,13 +12,15 @@ from matplotlib.colors import ListedColormap
 import tensorflow as tf
 id = 'pdgid'
 # -----------------------------------------------------------------------
-# Generate Events
+# Initalize
 # -----------------------------------------------------------------------
+num_events = 35000 # Number of events to process
+test = 10000 # Number of events to reserve for testing
 pythia = Pythia('ttbar.cmnd', random_state=1)
 selection = ((STATUS == 1) & ~HAS_END_VERTEX)
 unclustered_particles = list()
 # -----------------------------------------------------------------------
-# Generate Jets and Histogram Data
+# Function Definitions
 # -----------------------------------------------------------------------
 def is_massless_or_isolated(jet):
     # Returns true if a jet has nconsts = 1 and has a pdgid equal to that
@@ -54,50 +56,116 @@ def return_particle_data(jet):
     pt = np.array(pt)
     e = (pt**2 + m**2)**0.5
     return [eta, phi, e]
+def pythia_sim(cmd_file, part_name):
+    pythia = Pythia(cmd_file, random_state=1)
+    selection = ((STATUS == 1) & ~HAS_END_VERTEX)
+    unclustered_particles = list()
+    a = 0
+    part_tensor = []
+    for event in pythia(events=num_events):
+        jets_particle_eta = []
+        jets_particle_phi = []
+        jets_particle_energy = []
+        vectors = event.all(selection)
+        sequence = cluster(vectors, R=1.0, p=-1, ep=True)
+        jets = sequence.inclusive_jets()
+        unclustered_particles.append(sequence.unclustered_particles())
+        part_data = []
+        for i, jet in enumerate(jets):
+            data = (
+                    jet.eta, jet.phi, jet.e
+                   )
+            part_data = return_particle_data(jet)
+            if is_massless_or_isolated(jet):
+                discarded_data.append(jet)
+            else:
+                jets_particle_eta.extend(part_data[0])
+                jets_particle_phi.extend(part_data[1])
+                jets_particle_energy.extend(part_data[2])
+        plt.figure()
+        part_tensor.append(plt.hist2d(jets_particle_eta, jets_particle_phi,
+                    weights=jets_particle_energy,
+                    range=[(-5,5),(-1*np.pi,np.pi)],
+                    bins=(20,32), cmap='plasma')[0])
+        #plt.xlabel("$\eta$")
+        #plt.ylabel("$\phi$")
+        #plt.title("Particles from "+part_name)
+        #cbar = plt.colorbar()
+        #cbar.set_label('Tranverse Energy of Each Particle ($GeV$)')
+        #plt.savefig("hists/Jets_Particles_"+part_name+str(a)+".png")
+        a += 1
+    return np.array(part_tensor)
+
+def shuffle_and_stich(A, B, X, Y):
+    # A and B are both tensors which map to X and Y respectively
+    # In this file, A will be ttbar, X will be the array of 1's
+    # Y is the array of 0's. Need one input tensor, and one output
+    # array to train model.
+    if len(A) != len(B) != len(X) != len(Y):
+        print("All tensors must have same length")
+        return
+    T_i = [] # Input Tensor
+    T_o = [] # Output Tensor
+    i_a = 0
+    i_b = 0
+    # Randomly select between tensor A or B to append their next
+    # item. Unless one is empty then just shuffle in
+    prob = 0.5
+    while len(T_i) != len(A) + len(B):
+        if np.random.rand() > prob and i_a < len(A):
+            T_i.append(A[i_a])
+            T_o.append(X[i_a])
+            i_a += 1
+        elif i_b < len(B):
+            T_i.append(B[i_b])
+            T_o.append(Y[i_b])
+            i_b += 1
+            if i_b == len(B):
+                prob = 0 # Only add from Tensor A now, B is empty.
+    T_i = np.array(T_i)
+    T_o = np.array(T_o)
+    return T_i, T_o
 discarded_data = [] 
 # -----------------------------------------------------------------------
-# Main Loop for Storing Jet Data
+# Main process for generating tensor data
 # -----------------------------------------------------------------------
-a = 0
-for event in pythia(events=10):
-    jets_particle_eta = []
-    jets_particle_phi = []
-    jets_particle_energy = []
-    vectors = event.all(selection)
-    sequence = cluster(vectors, R=1.0, p=-1, ep=True)
-    jets = sequence.inclusive_jets()
-    unclustered_particles.append(sequence.unclustered_particles())
-    part_data = []
-    for i, jet in enumerate(jets):
-        data = (
-                jet.eta, jet.phi, jet.e
-               )
-        part_data = return_particle_data(jet)
-        if is_massless_or_isolated(jet):
-            discarded_data.append(jet)
-        else:
-            jets_particle_eta.extend(part_data[0])
-            jets_particle_phi.extend(part_data[1])
-            jets_particle_energy.extend(part_data[2])
-    plt.figure()
-    plt.hist2d(jets_particle_eta, jets_particle_phi,
-           weights=jets_particle_energy,
-           range=[(-5,5),(-1*np.pi,np.pi)],
-           bins=(20,32), cmap='plasma')
-    plt.xlabel("$\eta$")
-    plt.ylabel("$\phi$")
-    plt.title("Particles from $T\overline{T}$")
-    cbar = plt.colorbar()
-    cbar.set_label('Tranverse Energy of Each Particle ($GeV$)')
-    plt.savefig("Jets_Particles_TTbar"+str(a)+".png")
-    a += 1
+# ttbar_tensor has indices of event, followed by eta, followed by phi.
+# The value of the h_tensor is the associated transverse energy.
+ttbar_tensor = pythia_sim('ttbar.cmnd', "TTbar")
+zz_tensor = pythia_sim('zz.cmnd', 'ZZ')
+
+ttbar_training = ttbar_tensor[:test]
+ttbar_training_map = np.ones(test)
+ttbar_tensor = ttbar_tensor[test:]
+
+zz_training = zz_tensor[:test]
+zz_training_map = np.zeros(test)
+zz_tensor = zz_tensor[test:]
+
+ttbar_mapping = np.ones(num_events-test)
+zz_mapping = np.zeros(num_events-test)
+
+# T_i is the training data / the input tensor
+# T_o is the expected value (closer to 1 is ttbar, closer to 0 is zz
+T_i, T_o = shuffle_and_stich(ttbar_tensor, zz_tensor,
+                             ttbar_mapping, zz_mapping)
+Test_i, Test_o = shuffle_and_stich(ttbar_training, zz_training,
+                                   ttbar_training_map, zz_training_map)
 # -----------------------------------------------------------------------
 # Build the neural network
 # -----------------------------------------------------------------------
 model = tf.keras.models.Sequential()
-model.add(tf.keras.layers.Maximum())
-model.add(tf.keras.layers.Maximum())
+model.add(tf.keras.layers.Flatten())
+#model.add(tf.keras.layers.Maximum())
+#model.add(tf.keras.layers.Maximum())
 model.add(tf.keras.layers.Dense(64, activation=tf.nn.relu))
 model.add(tf.keras.layers.Dense(25, activation=tf.nn.relu))
 model.add(tf.keras.layers.Dense(1, activation=tf.nn.sigmoid))
-model.compile(loss='binary_crossentropy', optimizer='Adam')
+model.compile(loss='binary_crossentropy',
+              optimizer='Adam',
+              metric=['acurracy'])
+# -----------------------------------------------------------------------
+# Train and Test the Network
+# -----------------------------------------------------------------------
+model.fit(T_i, T_o, epochs=3)
+val_loss, val_acc = model.evaluate(Test_i, Test_o)
