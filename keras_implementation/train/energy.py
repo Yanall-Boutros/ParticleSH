@@ -15,11 +15,12 @@ discarded_data = []
 # -----------------------------------------------------------------------
 # Initalize
 # -----------------------------------------------------------------------
-num_events = 35000 # Number of events to process
-test = 10000 # Number of events to reserve for testing
+num_events = 1000 # Number of events to process
+test = 100 # Number of events to reserve for testing
 pythia = Pythia('ttbar.cmnd', random_state=1)
 selection = ((STATUS == 1) & ~HAS_END_VERTEX)
 unclustered_particles = list()
+model = tf.keras.models.load_model("first_model")
 # -----------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------
@@ -87,7 +88,8 @@ def pythia_sim(cmd_file, part_name, make_plots=False):
         part_tensor.append(plt.hist2d(jets_particle_eta, jets_particle_phi,
                     weights=jets_particle_energy,
                     range=[(-5,5),(-1*np.pi,np.pi)],
-                    bins=(20,32), cmap='plasma')[0])
+                    bins=(20,32), cmap='binary')[0])
+        plt.close()
         if make_plots:
             plt.xlabel("$\eta$")
             plt.ylabel("$\phi$")
@@ -127,6 +129,18 @@ def shuffle_and_stich(A, B, X, Y):
     T_i = np.array(T_i)
     T_o = np.array(T_o)
     return T_i, T_o
+
+def pred_comp(pred, real):
+    # Predictions compare takes a predictions array as input,
+    # and compares its results to an expected output (real array)
+    c = 0
+    predictions = np.round(pred)
+    elems = len(predictions)
+    for i in range(elems):
+        if predictions[i] == real[i]:
+            c += 1
+    return c / elems
+
 # -----------------------------------------------------------------------
 # Main process for generating tensor data
 # -----------------------------------------------------------------------
@@ -155,18 +169,21 @@ Test_i, Test_o = shuffle_and_stich(ttbar_training, zz_training,
 # -----------------------------------------------------------------------
 # Build the neural network
 # -----------------------------------------------------------------------
-model = tf.keras.models.Sequential()
-model.add(tf.keras.layers.Flatten())
-#model.add(tf.keras.layers.Maximum())
-#model.add(tf.keras.layers.Maximum())
-model.add(tf.keras.layers.Dense(64, activation=tf.nn.relu))
-model.add(tf.keras.layers.Dense(25, activation=tf.nn.relu))
-model.add(tf.keras.layers.Dense(1, activation=tf.nn.sigmoid))
-model.compile(loss='binary_crossentropy',
-              optimizer='Adam',
-              metric=['acurracy'])
+#model = tf.keras.models.Sequential()
+#model.add(tf.keras.layers.Flatten())
+##model.add(tf.keras.layers.Maximum())
+##model.add(tf.keras.layers.Maximum())
+#model.add(tf.keras.layers.Dense(64, activation=tf.nn.relu))
+#model.add(tf.keras.layers.Dense(25, activation=tf.nn.relu))
+#model.add(tf.keras.layers.Dense(1, activation=tf.nn.sigmoid))
+#model.compile(loss='binary_crossentropy',
+#              optimizer='Adam',
+#              metric=['acurracy'])
 # -----------------------------------------------------------------------
 # Train and Test the Network
 # -----------------------------------------------------------------------
-model.fit(T_i, T_o, epochs=3)
-val_loss, val_acc = model.evaluate(Test_i, Test_o)
+model.fit(T_i, T_o, epochs=100)
+model.save("first_model")
+predicitons = model.predict(Test_i)
+print("Neural Network correctly evaluated ", 100*pred_comp(predicitons, Test_o)
+      ,"% of test data")
