@@ -15,10 +15,9 @@ import tensorflow as tf
 # -----------------------------------------------------------------------
 model                 = tf.keras.models.load_model("first_model") 
 pid                   = 'pdgid'
-num_events            = 1000 # Number of events to process per parent
+num_events            = 10000 # Number of events to process per parent
 test                  = 100  # particle. Number of test events to reserve
-discarded_data        = [] 
-unclustered_particles = []
+discarded_data        = []   # Archive of any particles discarded
 # -----------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------
@@ -39,28 +38,33 @@ def is_massless_or_isolated(jet):
     if jet.mass < 0.4:
         return True
     return False
+
 def return_particle_data(jet):
     # return the array containing all the eta, phi, and energies of the
     # particles in a jets constituent array
-    vals        = []
-    eta         = []
-    phi         = []
-    m           = []
-    pt          = []
-    has_eta_phi = jet.constituents_array()
-    for i in range(len(has_eta_phi)):
-        pt.append(has_eta_phi[i][0])
+    eta         = [] # Eta and phi are coordinates, similar to cylindrical
+    phi         = [] # coordinates. But is more like the coordinates are  
+    m           = [] # Wrapepd around the inside of the cyilnder. Phi is
+    pt          = [] # the azimuthal. Eta is the psuedo-rapidity. m is 
+    has_eta_phi = jet.constituents_array() # the mass. and pt is the 
+    for i in range(len(has_eta_phi)):      # Transverse momentum (momentum  
+        pt.append(has_eta_phi[i][0])       # in the direction of travel.
         eta.append(has_eta_phi[i][1])
         phi.append(has_eta_phi[i][2])
         m.append(has_eta_phi[i][3])
     m = np.array(m)
     pt = np.array(pt)
-    e = (pt**2 + m**2)**0.5
+    e = (pt**2 + m**2)**0.5 # This is the transverse energy
     return [eta, phi, e]
-def pythia_sim(cmd_file, part_name, make_plots=False):
+def pythia_sim(cmd_file, part_name="unnamed", make_plots=False):
+    # The main simulation. Takes a cmd_file as input. part_name 
+    # is the name of the particle we're simulating decays from.
+    # Only necessary for titling graphs.
+    # Returns an array of 2D histograms, mapping eta, phi, with transverse
+    # energy.
     pythia = Pythia(cmd_file, random_state=1)
     selection = ((STATUS == 1) & ~HAS_END_VERTEX)
-    unclustered_particles = list()
+    unclustered_particles = []
     a = 0
     part_tensor = []
     for event in pythia(events=num_events):
@@ -73,9 +77,6 @@ def pythia_sim(cmd_file, part_name, make_plots=False):
         unclustered_particles.append(sequence.unclustered_particles())
         part_data = []
         for i, jet in enumerate(jets):
-            data = (
-                    jet.eta, jet.phi, jet.e
-                   )
             part_data = return_particle_data(jet)
             if is_massless_or_isolated(jet):
                 discarded_data.append(jet)
@@ -87,8 +88,8 @@ def pythia_sim(cmd_file, part_name, make_plots=False):
         part_tensor.append(plt.hist2d(jets_particle_eta, jets_particle_phi,
                     weights=jets_particle_energy,
                     range=[(-5,5),(-1*np.pi,np.pi)],
-                    bins=(20,32), cmap='binary')[0])
-        plt.close()
+                    bins=(20,32), cmap='binary')[0]) # We're only taking the
+        plt.close() # Zeroth element, which is the raw data of the 2D Histogram
         if make_plots:
             plt.xlabel("$\eta$")
             plt.ylabel("$\phi$")
@@ -107,21 +108,21 @@ def shuffle_and_stich(A, B, X, Y):
     if len(A) != len(B) != len(X) != len(Y):
         print("All tensors must have same length")
         return
-    T_i = [] # Input Tensor
-    T_o = [] # Output Tensor
-    i_a = 0
-    i_b = 0
+    T_i = [] # Input Tensor for NN
+    T_o = [] # Output Tensor for NN. Input maps to output.
+    i_a = 0 # Iterator for ttbar mappings 
+    i_b = 0 # Iterator for ZZ mappings.
     # Randomly select between tensor A or B to append their next
     # item. Unless one is empty then just shuffle in
     prob = 0.5
-    while len(T_i) != len(A) + len(B):
+    while len(T_i) != (len(A) + len(B)):
         if np.random.rand() > prob and i_a < len(A):
-            T_i.append(A[i_a])
+            T_i.append(A[i_a]) # A[i_a] maps to X[i_a]
             T_o.append(X[i_a])
             i_a += 1
         elif i_b < len(B):
-            T_i.append(B[i_b])
-            T_o.append(Y[i_b])
+            T_i.append(B[i_b]) # Similarily, B[i_b] maps
+            T_o.append(Y[i_b]) # to Y[i_b]
             i_b += 1
             if i_b == len(B):
                 prob = 0 # Only add from Tensor A now, B is empty.
@@ -132,6 +133,7 @@ def shuffle_and_stich(A, B, X, Y):
 def pred_comp(pred, real):
     # Predictions compare takes a predictions array as input,
     # and compares its results to an expected output (real array)
+    # Returns the percentage of predictions which were accurate.
     c = 0
     predictions = np.round(pred)
     elems = len(predictions)
@@ -156,8 +158,8 @@ zz_training = zz_tensor[:test]
 zz_training_map = np.zeros(test)
 zz_tensor = zz_tensor[test:]
 
-ttbar_mapping = np.ones(num_events-test)
-zz_mapping = np.zeros(num_events-test)
+ttbar_mapping = np.ones(num_events - test)
+zz_mapping = np.zeros(num_events - test)
 
 # T_i is the training data / the input tensor
 # T_o is the expected value (closer to 1 is ttbar, closer to 0 is zz
