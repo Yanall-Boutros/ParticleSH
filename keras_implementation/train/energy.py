@@ -1,6 +1,6 @@
-# ----------------------------------------------------------------------
+# ====================================================================== 
 # Import Statements
-# ----------------------------------------------------------------------
+# ====================================================================== 
 from numpythia import Pythia, hepmc_write, hepmc_read
 from numpythia import STATUS, HAS_END_VERTEX, ABS_PDG_ID
 import matplotlib
@@ -10,30 +10,29 @@ import numpy as np
 from pyjet import cluster
 from matplotlib.colors import ListedColormap
 import tensorflow as tf
-id = 'pdgid'
-discarded_data = [] 
 # -----------------------------------------------------------------------
 # Initalize
 # -----------------------------------------------------------------------
-num_events = 1000 # Number of events to process
-test = 100 # Number of events to reserve for testing
-pythia = Pythia('ttbar.cmnd', random_state=1)
-selection = ((STATUS == 1) & ~HAS_END_VERTEX)
-unclustered_particles = list()
-model = tf.keras.models.load_model("first_model")
+model                 = tf.keras.models.load_model("first_model") 
+pid                   = 'pdgid'
+num_events            = 1000 # Number of events to process per parent
+test                  = 100  # particle. Number of test events to reserve
+discarded_data        = [] 
+unclustered_particles = []
 # -----------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------
 def is_massless_or_isolated(jet):
-    # Returns true if a jet has nconsts = 1 and has a pdgid equal to that
+    # Returns true if a jet is only constituated of one particle
+    # (nconsts == 1) and has a pdgid equal to that
     # of a photon or a gluon
     if len(jet.constituents_array()) == 1: 
-        if np.abs(jet.info[id]) == 21 or np.abs(jet.info[id]) == 22:
+        if np.abs(jet.info[pid]) == 21 or np.abs(jet.info[pid]) == 22:
             return True
         # if a muon is outside of the radius of the jet, discard it
-        if np.abs(jet.info['pdgid']) == 13:
-            if 2*jet.mass/jet.pt > 1.0: return True
-     # Remove Jets with too high an eta
+        if np.abs(jet.info[pid]) == 13 and 2*jet.mass/jet.pt > 1.0:
+            return True
+    # Remove Jets with too high an eta
     if np.abs(jet.eta) > 5.0:
         return True
     # Remove any jets less than an arbitrary near zero mass
@@ -43,12 +42,12 @@ def is_massless_or_isolated(jet):
 def return_particle_data(jet):
     # return the array containing all the eta, phi, and energies of the
     # particles in a jets constituent array
-    vals = []
+    vals        = []
+    eta         = []
+    phi         = []
+    m           = []
+    pt          = []
     has_eta_phi = jet.constituents_array()
-    eta = []
-    phi = []
-    m = []
-    pt = []
     for i in range(len(has_eta_phi)):
         pt.append(has_eta_phi[i][0])
         eta.append(has_eta_phi[i][1])
