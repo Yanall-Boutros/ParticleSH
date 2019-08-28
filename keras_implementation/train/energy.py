@@ -13,7 +13,7 @@ import tensorflow as tf
 # -----------------------------------------------------------------------
 # Initalize
 # -----------------------------------------------------------------------
-model                 = tf.keras.models.load_model("first_model") 
+#model                 = tf.keras.models.load_model("first_model") 
 pid                   = 'pdgid'
 num_events            = 10000 # Number of events to process per parent
 test                  = 100  # particle. Number of test events to reserve
@@ -86,7 +86,7 @@ def pythia_sim(cmd_file, part_name="unnamed", make_plots=False):
                 jets_particle_energy.extend(part_data[2])
         plt.figure()
         part_tensor.append(plt.hist2d(jets_particle_eta, jets_particle_phi,
-                    weights=jets_particle_energy,
+                    weights=jets_particle_energy, normed=True,
                     range=[(-5,5),(-1*np.pi,np.pi)],
                     bins=(20,32), cmap='binary')[0]) # We're only taking the
         plt.close() # Zeroth element, which is the raw data of the 2D Histogram
@@ -168,20 +168,24 @@ T_i, T_o = shuffle_and_stich(ttbar_tensor, zz_tensor,
 Test_i, Test_o = shuffle_and_stich(ttbar_training, zz_training,
                                    ttbar_training_map, zz_training_map)
 # -----------------------------------------------------------------------
-# Build the neural network
+# Build various NN structures
 # -----------------------------------------------------------------------
-#model = tf.keras.models.Sequential()
-#model.add(tf.keras.layers.Flatten())
-##model.add(tf.keras.layers.Maximum())
-##model.add(tf.keras.layers.Maximum())
-#model.add(tf.keras.layers.Dense(64, activation=tf.nn.relu))
-#model.add(tf.keras.layers.Dense(25, activation=tf.nn.relu))
-#model.add(tf.keras.layers.Dense(1, activation=tf.nn.sigmoid))
-#model.compile(loss='binary_crossentropy',
-#              optimizer='Adam',
-#              metric=['acurracy'])
+# Build the Feed-Forward neural network
 # -----------------------------------------------------------------------
-# Train and Test the Network
+ffmodel = tf.keras.models.Sequential()
+ffmodel.add(tf.keras.layers.Flatten())
+ffmodel.add(tf.keras.layers.Dense(64, activation=tf.nn.relu))
+ffmodel.add(tf.keras.layers.Dense(25, activation=tf.nn.relu))
+ffmodel.add(tf.keras.layers.Dense(1, activation=tf.nn.sigmoid))
+ffmodel.compile(loss='binary_crossentropy',
+                optimizer='Adam',
+                metric=['acurracy'])
+# -----------------------------------------------------------------------
+# Build the CNN
+# -----------------------------------------------------------------------
+img_input = tf.keras.layers.Input(shape=(T_i))
+# -----------------------------------------------------------------------
+# Train and Test the Networks
 # -----------------------------------------------------------------------
 model.fit(T_i, T_o, epochs=100)
 model.save("first_model")
