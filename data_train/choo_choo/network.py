@@ -2,6 +2,7 @@
 # Import Statements
 # ---------------------------------------------------------------------
 import tensorflow as tf
+import numpy as np
 import pickle as pic
 import os
 import os.path
@@ -26,7 +27,10 @@ def get_care_packages():
     i = 0
     # If there are no care packages, then wait
     while not os.path.isfile(base_name+str(i)):
+        print("No care_package file detected, waiting 10 seconds...")
         time.sleep(10)
+        # quick check to see if it's time to stop
+        if not np.load(open("control"), "rb"): exit()
     # iterate through all the care_packagen files where n is an arbitrary
     # number for valid carepackages, then export all as a list, deleting as
     # we append to the list
@@ -54,7 +58,7 @@ ffmodel.compile(loss='binary_crossentropy',
 # -----------------------------------------------------------------------
 # Train and Test the Network
 # -----------------------------------------------------------------------
-while np.load(open("control")):
+while np.load(open("control", "rb")):
     care_pallet = get_care_packages()
     for care_package in care_pallet:
         T_i, T_o = care_package[0], care_package[1] 

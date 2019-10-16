@@ -159,7 +159,7 @@ def ship(carepack):
 # -----------------------------------------------------------------------
 # Main process for generating tensor data
 # -----------------------------------------------------------------------
-while np.load(open("control_flow")):
+while np.load(open("control", "rb")):
     # ttbar_tensor has indices of event, followed by eta, followed by phi.
     # The value of the h_tensor is the associated transverse energy.
     ttbar_tensor = pythia_sim('ttbar.cmnd', "TTbar")
