@@ -155,7 +155,7 @@ def ship(carepack):
         i += 1
         while os.path.isfile(base_name+str(i)):
             i += 1
-    np.save(open((base_name+str(i)), "rb"), carepack)  
+    np.save(open((base_name+str(i)), "wb"), carepack)  
 # -----------------------------------------------------------------------
 # Main process for generating tensor data
 # -----------------------------------------------------------------------

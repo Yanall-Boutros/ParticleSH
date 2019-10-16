@@ -30,13 +30,14 @@ def get_care_packages():
         print("No care_package file detected, waiting 10 seconds...")
         time.sleep(10)
         # quick check to see if it's time to stop
-        if not np.load(open("control"), "rb"): exit()
+        if not np.load(open("control", "rb")): exit()
     # iterate through all the care_packagen files where n is an arbitrary
     # number for valid carepackages, then export all as a list, deleting as
     # we append to the list
     care_pallet = [] # A pallet contains many packages
     while os.path.isfile(base_name+str(i)):
-        care_pallet.append(np.load(open(base_name+str(i), "rb")))
+        care_pallet.append(np.load(open(base_name+str(i), "rb"),
+                                   allow_pickle=True))
         os.remove(base_name+str(i))
         i += 1
     return care_pallet
@@ -62,10 +63,10 @@ while np.load(open("control", "rb")):
     care_pallet = get_care_packages()
     for care_package in care_pallet:
         T_i, T_o = care_package[0], care_package[1] 
-        Test_i, Test_o = care_package[2], carepackage[3]
-        model.fit(T_i, T_o, epochs=100)
-        model.save("first_model")
-        predicitons = model.predict(Test_i)
+        Test_i, Test_o = care_package[2], care_package[3]
+        ffmodel.fit(T_i, T_o, epochs=10)
+        ffmodel.save("ff_model")
+        predicitons = ffmodel.predict(Test_i)
         print("Neural Network correctly evaluated ", 100*pred_comp(predicitons, Test_o)
               ,"% of test data")
 print("Training Halted")
