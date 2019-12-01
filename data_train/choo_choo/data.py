@@ -15,7 +15,6 @@ import os.path
 # -----------------------------------------------------------------------
 # Initalize
 # -----------------------------------------------------------------------
-#model                 = tf.keras.models.load_model("first_model") 
 pid                   = 'pdgid'
 num_events            = 1000 # Number of events to process per parent
 test                  = 100  # particle. Number of test events to reserve
@@ -58,6 +57,7 @@ def return_particle_data(jet):
     pt = np.array(pt)
     e = (pt**2 + m**2)**0.5 # This is the transverse energy
     return [eta, phi, e]
+
 def pythia_sim(cmd_file, part_name="unnamed", make_plots=False):
     # The main simulation. Takes a cmd_file as input. part_name 
     # is the name of the particle we're simulating decays from.
@@ -131,18 +131,6 @@ def shuffle_and_stich(A, B, X, Y):
     T_i = np.array(T_i)
     T_o = np.array(T_o)
     return T_i, T_o
-
-def pred_comp(pred, real):
-    # Predictions compare takes a predictions array as input,
-    # and compares its results to an expected output (real array)
-    # Returns the percentage of predictions which were accurate.
-    c = 0
-    predictions = np.round(pred)
-    elems = len(predictions)
-    for i in range(elems):
-        if predictions[i] == real[i]:
-            c += 1
-    return c / elems
 
 def ship(carepack):
     # carepack is a numpy multidim array

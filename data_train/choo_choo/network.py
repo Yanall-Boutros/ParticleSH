@@ -30,7 +30,9 @@ def get_care_packages():
         print("No care_package file detected, waiting 10 seconds...")
         time.sleep(10)
         # quick check to see if it's time to stop
-        if not np.load(open("control", "rb")): exit()
+        if not np.load(open("control", "rb")):
+            print("Training Halted")
+            exit()
     # iterate through all the care_packagen files where n is an arbitrary
     # number for valid carepackages, then export all as a list, deleting as
     # we append to the list
@@ -64,9 +66,9 @@ while np.load(open("control", "rb")):
     for care_package in care_pallet:
         T_i, T_o = care_package[0], care_package[1] 
         Test_i, Test_o = care_package[2], care_package[3]
-        ffmodel.fit(T_i, T_o, epochs=10)
+        history = ffmodel.fit(T_i, T_o, epochs=1)
         ffmodel.save("ff_model")
-        predicitons = ffmodel.predict(Test_i)
-        print("Neural Network correctly evaluated ", 100*pred_comp(predicitons, Test_o)
-              ,"% of test data")
+        predicitons = ffmodel.predict(Test_i) # vtr stands for
+        vtr = pred_comp(predicitons, Test_o) # validation testing results
+        print("Neural Network correctly evaluated ", 100*vtr ,"% of test data")
 print("Training Halted")
