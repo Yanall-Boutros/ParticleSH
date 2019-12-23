@@ -9,13 +9,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pyjet import cluster
 from matplotlib.colors import ListedColormap
-id = 'pdgid'
 # -----------------------------------------------------------------------
-# Generate Events
+# Initalize
 # -----------------------------------------------------------------------
-pythia = Pythia('zz.cmnd', random_state=1)
-selection = ((STATUS == 1) & ~HAS_END_VERTEX)
-unclustered_particles = list()
+id                    = 'pdgid'
+cmd_file              = 'zz.cmnd'
+num_events            = 10
+unclustered_particles = []
 # -----------------------------------------------------------------------
 # Generate Jets and Histogram Data
 # -----------------------------------------------------------------------
@@ -53,40 +53,91 @@ def return_particle_data(jet):
     pt = np.array(pt)
     e = (pt**2 + m**2)**0.5
     return [eta, phi, e]
+def pythia_sim(cmd_file, part_name="", make_plots=False):
+    # The main simulation. Takes a cmd_file as input. part_name 
+    # is the name of the particle we're simulating decays from.
+    # Only necessary for titling graphs.
+    # Returns an array of 2D histograms, mapping eta, phi, with transverse
+    # energy.
+    if part_name == "":
+        for char in cmd_file:
+            if char == ".":
+                break
+            else:
+                part_name += char
+    pythia      = Pythia(cmd_file, random_state=1)
+    selection   = ((STATUS == 1) & ~HAS_END_VERTEX)
+    unclustered_particles = []
+    part_tensor = []
+    a = 0
+    for event in pythia(events=num_events):
+        jets_particle_eta    = []
+        jets_particle_phi    = []
+        jets_particle_energy = []
+        vectors   = event.all(selection)
+        sequence  = cluster(vectors, R=1.0, p=-1, ep=True)
+        jets      = sequence.inclusive_jets()
+        unclustered_particles.append(sequence.unclustered_particles())
+        part_data = []
+        for i, jet in enumerate(jets):
+            part_data = return_particle_data(jet)
+            if is_massless_or_isolated(jet):
+                discarded_data.append(jet)
+            else:
+                jets_particle_eta.extend(part_data[0])
+                jets_particle_phi.extend(part_data[1])
+                jets_particle_energy.extend(part_data[2])
+        plt.figure()
+        part_tensor.append(plt.hist2d(jets_particle_eta, jets_particle_phi,
+                    weights=jets_particle_energy, density=True,
+                    range=[(-5,5),(-1*np.pi,np.pi)],
+                    bins=(20,32), cmap='binary')[0]) # We're only taking the
+        if not make_plots: plt.close() # Zeroth element, which is the raw data of the 2D Histogram
+        if make_plots:
+            plt.xlabel("$\eta$")
+            plt.ylabel("$\phi$")
+            plt.title("Particles from "+part_name)
+            cbar = plt.colorbar()
+            cbar.set_label('Tranverse Energy of Each Particle ($GeV$)')
+            plt.savefig("hists/Jets_Particles_"+part_name+str(a)+".png")
+            plt.close()
+        a += 1
+    return np.array(part_tensor)
 discarded_data = [] 
 # -----------------------------------------------------------------------
 # Main Loop for Storing Jet Data
 # -----------------------------------------------------------------------
-a = 0
-for event in pythia(events=10):
-    jets_particle_eta = []
-    jets_particle_phi = []
-    jets_particle_energy = []
-    vectors = event.all(selection)
-    sequence = cluster(vectors, R=0.4, p=-1, ep=True)
-    jets = sequence.inclusive_jets()
-    unclustered_particles.append(sequence.unclustered_particles())
-    part_data = []
-    for i, jet in enumerate(jets):
-        data = (
-                jet.eta, jet.phi, jet.e
-               )
-        part_data = return_particle_data(jet)
-        if is_massless_or_isolated(jet):
-            discarded_data.append(jet)
-        else:
-            jets_particle_eta.extend(part_data[0])
-            jets_particle_phi.extend(part_data[1])
-            jets_particle_energy.extend(part_data[2])
-    plt.figure()
-    plt.hist2d(jets_particle_eta, jets_particle_phi,
-           weights=jets_particle_energy,
-           range=[(-5,5),(-1*np.pi,np.pi)],
-           bins=(20,32), cmap='plasma')
-    plt.xlabel("$\eta$")
-    plt.ylabel("$\phi$")
-    plt.title("Particles from $ZZ$")
-    cbar = plt.colorbar()
-    cbar.set_label('Tranverse Energy of Each Particle ($GeV$)')
-    plt.savefig("Jets_Particles_ZZ"+str(a)+".png")
-    a += 1
+pythia_sim(cmd_file, make_plots=True)
+#a = 0
+#for event in pythia(events=10):
+#    jets_particle_eta = []
+#    jets_particle_phi = []
+#    jets_particle_energy = []
+#    vectors = event.all(selection)
+#    sequence = cluster(vectors, R=0.4, p=-1, ep=True)
+#    jets = sequence.inclusive_jets()
+#    unclustered_particles.append(sequence.unclustered_particles())
+#    part_data = []
+#    for i, jet in enumerate(jets):
+#        data = (
+#                jet.eta, jet.phi, jet.e
+#               )
+#        part_data = return_particle_data(jet)
+#        if is_massless_or_isolated(jet):
+#            discarded_data.append(jet)
+#        else:
+#            jets_particle_eta.extend(part_data[0])
+#            jets_particle_phi.extend(part_data[1])
+#            jets_particle_energy.extend(part_data[2])
+#    plt.figure()
+#    plt.hist2d(jets_particle_eta, jets_particle_phi,
+#           weights=jets_particle_energy,
+#           range=[(-5,5),(-1*np.pi,np.pi)],
+#           bins=(20,32), cmap='plasma')
+#    plt.xlabel("$\eta$")
+#    plt.ylabel("$\phi$")
+#    plt.title("Particles from $T\overline{T}$")
+#    cbar = plt.colorbar()
+#    cbar.set_label('Tranverse Energy of Each Particle ($GeV$)')
+#    plt.savefig("Jets_Particles_TTbar"+str(a)+".png")
+#    a += 1
