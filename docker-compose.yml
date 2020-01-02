@@ -1,0 +1,9 @@
+version: '3'
+services:
+  particlesh:
+    build: .
+    ports:
+      - "5000:5000"
+  root:
+    image: "rootproject/root-ubuntu16"
+

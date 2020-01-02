@@ -1,0 +1,21 @@
+Pythia
+  Event Generator
+  Takes instructions about what processes to generate, such as proton-proton to
+  make ttbar or zz
+
+  configurations enter pythia, these are cmnd files
+  Output is ascii list of 4 vectros. Pions, muons, etc...
+  PDG stands for particle data group, 
+
+Root Analysis
+  Code in C++/Python
+  Output is ntuples or histograms
+
+Docker Container
+  Contains everything for the process
+  Ssh into computer cluster, atlas02
+  ssh to HB
+
+Able to implement input to pythis with MG5@amcnlo, instead of config files
+  Able to calculate all parton information
+  can pass that info into pythia as input

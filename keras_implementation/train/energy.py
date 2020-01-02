@@ -16,7 +16,7 @@ import tensorflow as tf
 #model                 = tf.keras.models.load_model("first_model") 
 pid                   = 'pdgid'
 num_events            = 10000 # Number of events to process per parent
-test                  = 100  # particle. Number of test events to reserve
+test                  = 1000  # particle. Number of test events to reserve
 discarded_data        = []   # Archive of any particles discarded
 # -----------------------------------------------------------------------
 # Function Definitions
@@ -176,6 +176,7 @@ ffmodel = tf.keras.models.Sequential()
 ffmodel.add(tf.keras.layers.Flatten())
 ffmodel.add(tf.keras.layers.Dense(64, activation=tf.nn.relu))
 ffmodel.add(tf.keras.layers.Dense(25, activation=tf.nn.relu))
+ffmodel.add(tf.keras.layers.Dense(2, activation=tf.nn.relu))
 ffmodel.add(tf.keras.layers.Dense(1, activation=tf.nn.sigmoid))
 ffmodel.compile(loss='binary_crossentropy',
                 optimizer='Adam',
@@ -183,12 +184,12 @@ ffmodel.compile(loss='binary_crossentropy',
 # -----------------------------------------------------------------------
 # Build the CNN
 # -----------------------------------------------------------------------
-img_input = tf.keras.layers.Input(shape=(T_i))
+#img_input = tf.keras.layers.Input(shape=(np.shape(T_i)))
 # -----------------------------------------------------------------------
 # Train and Test the Networks
 # -----------------------------------------------------------------------
-model.fit(T_i, T_o, epochs=100)
-model.save("first_model")
-predicitons = model.predict(Test_i)
+ffmodel.fit(T_i, T_o, epochs=100)
+ffmodel.save("first_model")
+predicitons = ffmodel.predict(Test_i)
 print("Neural Network correctly evaluated ", 100*pred_comp(predicitons, Test_o)
       ,"% of test data")

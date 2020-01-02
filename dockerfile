@@ -1,0 +1,16 @@
+FROM tensorflow/tensorflow 
+ADD ./pythia_practice/* ./particleSH/pyth_prac/
+ADD ./jet_prac/ttbar/* ./particleSH/jet_prac/ttbar/
+ADD ./jet_prac/zz/* ./particleSH/jet_prac/zz/
+ADD ./2d_hists/ttbar/* ./particleSH/2d_hists/ttbar/
+ADD ./2d_hists/zz/* ./particleSH/2d_hists/zz/
+ADD ./four_vec_hists/* ./particleSH/four_vec_hists/
+ADD ./data_train/choo_choo/* ./particleSH/data_train/
+RUN  apt-get update
+RUN  apt-get -y install python3-dev bash libpng-dev g++ git  python3 python3-pip python-pip
+RUN  python3 -m pip uninstall -y pip &&  apt install python3-pip --reinstall
+RUN pip install --user --upgrade pip
+RUN pip3 install --user --upgrade pip
+RUN python3 -m pip install --user numpy
+RUN python3 -m pip install --user numpythia matplotlib pyjet tensorflow requests pandas scikit-hep scikit-learn uproot scipy pyhepmc-ng 
+RUN git clone https://github.com/lukasheinrich/pylhe && cd pylhe && python3 setup.py install

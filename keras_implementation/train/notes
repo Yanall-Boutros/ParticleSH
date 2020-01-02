@@ -1,0 +1,10 @@
+how to expand CNN
+--Possible improvements to network
+--Difference between adding another layer vs adding more nodes in a layer
+hyper parameter scanning - addressed hyper parameters in class. How to 
+address hyper parameter scanning as an algorithm. Local search? Genetic algorithm?
+
+Basic theory, algorithms, or concept behind reinforcement learning
+as we're gonna miss it. Possibly some literature.
+
+resnet and imagre net CNN strucutres
